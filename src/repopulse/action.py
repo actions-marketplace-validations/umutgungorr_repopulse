@@ -10,8 +10,13 @@ import os
 import sys
 from pathlib import Path
 
-from repopulse.engine import RepoPulseEngine
-from repopulse.formatter import format_markdown
+# Ensure repopulse package root is importable across all runner environments
+_SRC_DIR = str(Path(__file__).resolve().parent.parent)
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+
+from repopulse.engine import RepoPulseEngine  # noqa: E402
+from repopulse.formatter import format_markdown  # noqa: E402
 
 
 def set_output(name: str, value: str) -> None:

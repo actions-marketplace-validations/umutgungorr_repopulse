@@ -36,12 +36,12 @@ def analyze_hotspots(commits: Iterable[CommitInfo], top_n: int = 15) -> list[Hot
         # Hotspot score: log(churn + 1) * sqrt(net_size)
         score = math.log1p(churn) * math.sqrt(net_size)
 
-        # Risk classification
-        if churn >= 10 and score >= 25.0:
+        # Risk classification: require meaningful churn before escalating to HIGH/CRITICAL
+        if churn >= 8 and score >= 25.0:
             risk = "CRITICAL"
-        elif churn >= 6 or score >= 15.0:
+        elif (churn >= 4 and score >= 15.0) or churn >= 12:
             risk = "HIGH"
-        elif churn >= 3 or score >= 8.0:
+        elif (churn >= 2 and score >= 8.0) or churn >= 6:
             risk = "MEDIUM"
         else:
             risk = "LOW"

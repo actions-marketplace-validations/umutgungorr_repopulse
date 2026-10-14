@@ -24,9 +24,9 @@ def analyze_bus_factor(
 
     for c in commits:
         author = c.author_name or c.author_email or "Unknown"
-        for f in c.files:
-            file_authors[f.path][author] += 1
-            file_revisions[f.path] += 1
+        for path in {f.path for f in c.files}:
+            file_authors[path][author] += 1
+            file_revisions[path] += 1
 
     results: list[FileBusFactor] = []
     for path, authors in file_authors.items():

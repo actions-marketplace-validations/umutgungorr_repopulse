@@ -59,3 +59,22 @@ def test_hotspot_empty():
     summary = summarize_hotspots([])
     assert summary["total_hotspots"] == 0
     assert summary["highest_risk_file"] is None
+
+
+def test_hotspot_low_churn_not_critical_or_high():
+    # A single commit adding 1000 lines should NOT be marked as HIGH or CRITICAL hotspot
+    commits = [
+        CommitInfo(
+            "c1",
+            "Dev",
+            "dev@test.com",
+            1,
+            "2026-01-01",
+            "init",
+            [FileChange("large_init.py", 1000, 0)],
+        )
+    ]
+    hotspots = analyze_hotspots(commits)
+    assert len(hotspots) == 1
+    assert hotspots[0].risk_level not in ("CRITICAL", "HIGH")
+    assert hotspots[0].risk_level == "LOW"

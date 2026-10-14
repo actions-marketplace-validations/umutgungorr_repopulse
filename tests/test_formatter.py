@@ -100,6 +100,45 @@ def test_format_sub_tables():
     assert "src/core.py" in cp_out
 
 
+def test_format_sub_tables_empty():
+    bf_out = format_busfactor_table([], use_color=False)
+    assert "No acute bus factor bottlenecks found." in bf_out
+
+    hs_out = format_hotspots_table([], use_color=False)
+    assert "No architectural hotspots detected." in hs_out
+
+    cp_out = format_coupling_table([], use_color=False)
+    assert "No tight temporal coupling detected between disjoint files." in cp_out
+
+
+def test_table_column_alignment():
+    report = create_sample_report()
+    text = format_text(report, use_color=False)
+    lines = text.splitlines()
+
+    # Verify Hotspots column alignment
+    header_idx = next(i for i, line in enumerate(lines) if "Risk Level" in line and "Churn" in line)
+    data_idx = header_idx + 2
+    header_line = lines[header_idx]
+    data_line = lines[data_idx]
+
+    # "Churn" header and churn value should start at matching character offsets
+    churn_header_pos = header_line.index("Churn")
+    assert header_line[churn_header_pos : churn_header_pos + 5] == "Churn"
+    assert data_line[churn_header_pos].isdigit()
+
+    # Bus factor sub-table alignment
+    bf_text = format_busfactor_table(report.bus_factor_risks, use_color=False)
+    bf_lines = bf_text.splitlines()
+    bf_hdr_idx = next(
+        i for i, line in enumerate(bf_lines) if "Status" in line and "Revisions" in line
+    )
+    bf_hdr = bf_lines[bf_hdr_idx]
+    bf_row = bf_lines[bf_hdr_idx + 2]
+    rev_pos = bf_hdr.index("Revisions")
+    assert bf_row[rev_pos].isdigit()
+
+
 def test_render_progress_bar():
     bar_unicode = render_progress_bar(50, width=10, use_ascii=False)
     assert "█████" in bar_unicode

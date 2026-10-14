@@ -50,6 +50,7 @@ def test_cli_audit_json(tmp_path: Path):
     data = json.loads(out_json.read_text(encoding="utf-8"))
     assert data["total_commits"] == 2
     assert data["total_authors"] == 1
+    assert data["active_days"] == 1
     assert data["overall_health_score"] > 0
 
 

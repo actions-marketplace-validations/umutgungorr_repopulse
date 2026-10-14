@@ -110,10 +110,10 @@ def format_text(
         )
         out.append(s.gray(f"  {sub_sep * (line_w - 2)}"))
         for b in at_risk[:8]:
-            pct_str = s.red(f"{b.top_author_pct:.1f}% solo")
-            out.append(
-                f"  {pct_str:<24} {b.total_revisions:<11} {b.top_author[:18]:<20} {s.cyan(b.path)}"
-            )
+            pct_raw = f"{b.top_author_pct:.1f}% solo"
+            pct_col = s.red(f"{pct_raw:<15}")
+            top_auth_col = f"{b.top_author[:18]:<20}"
+            out.append(f"  {pct_col} {b.total_revisions:<11} {top_auth_col} {s.cyan(b.path)}")
         if len(at_risk) > 8:
             out.append(s.gray(f"  ... and {len(at_risk) - 8} more at-risk files."))
     else:
@@ -135,16 +135,18 @@ def format_text(
         )
         out.append(s.gray(f"  {sub_sep * (line_w - 2)}"))
         for h in report.hotspots[:8]:
+            tag = f"[{h.risk_level}]"
+            tag_pad = f"{tag:<12}"
             if h.risk_level == "CRITICAL":
-                lvl = s.red("[CRITICAL]")
+                lvl = s.red(tag_pad)
             elif h.risk_level == "HIGH":
-                lvl = s.red("[HIGH]   ")
+                lvl = s.red(tag_pad)
             elif h.risk_level == "MEDIUM":
-                lvl = s.yellow("[MEDIUM] ")
+                lvl = s.yellow(tag_pad)
             else:
-                lvl = s.gray("[LOW]    ")
+                lvl = s.gray(tag_pad)
             out.append(
-                f"  {lvl:<21} {h.churn_count:<8} {h.estimated_size:<12} {h.hotspot_score:<8.1f} {s.cyan(h.path)}"
+                f"  {lvl} {h.churn_count:<8} {h.estimated_size:<12} {h.hotspot_score:<8.1f} {s.cyan(h.path)}"
             )
         if len(report.hotspots) > 8:
             out.append(s.gray(f"  ... and {len(report.hotspots) - 8} more hotspots."))
@@ -158,9 +160,10 @@ def format_text(
         out.append(s.gray(f"  {'Co-Changes':<12} {'Coupling %':<12} {'Connected File Pair'}"))
         out.append(s.gray(f"  {sub_sep * (line_w - 2)}"))
         for c in report.couplings[:6]:
-            c_pct = s.yellow(f"{c.coupling_pct:.1f}%")
+            c_pct_str = f"{c.coupling_pct:.1f}%"
+            c_pct_col = s.yellow(f"{c_pct_str:<12}")
             arrow = "<-->" if use_ascii else "⟷"
-            out.append(f"  {c.co_changes:<12} {c_pct:<21} {c.file_a} {arrow} {c.file_b}")
+            out.append(f"  {c.co_changes:<12} {c_pct_col} {c.file_a} {arrow} {c.file_b}")
         if len(report.couplings) > 6:
             out.append(s.gray(f"  ... and {len(report.couplings) - 6} more coupled pairs."))
     else:
@@ -197,6 +200,12 @@ def format_busfactor_table(
         s.bold(s.cyan("\n RepoPulse Bus Factor & Knowledge Silo Analysis")),
         s.gray(sub_sep * line_w),
     ]
+
+    if not bus_risks:
+        out.append(s.green("  No acute bus factor bottlenecks found."))
+        out.append(s.gray(sub_sep * line_w + "\n"))
+        return "\n".join(out)
+
     out.append(
         s.gray(
             f"{'Status':<12} {'Revisions':<11} {'Top Author':<22} {'Concentration':<15} {'File Path'}"
@@ -205,14 +214,17 @@ def format_busfactor_table(
     out.append(s.gray(sub_sep * line_w))
 
     for b in bus_risks:
-        status = s.red("[RISK]") if b.is_at_risk else s.green("[BALANCED]")
-        pct = (
-            s.red(f"{b.top_author_pct:.1f}%")
-            if b.is_at_risk
-            else s.gray(f"{b.top_author_pct:.1f}%")
-        )
+        tag = "[RISK]" if b.is_at_risk else "[BALANCED]"
+        tag_pad = f"{tag:<12}"
+        status_cell = s.red(tag_pad) if b.is_at_risk else s.green(tag_pad)
+
+        pct_str = f"{b.top_author_pct:.1f}%"
+        pct_pad = f"{pct_str:<15}"
+        pct_cell = s.red(pct_pad) if b.is_at_risk else s.gray(pct_pad)
+
+        top_author_str = f"{b.top_author[:20]:<22}"
         out.append(
-            f"{status:<21} {b.total_revisions:<11} {b.top_author[:20]:<22} {pct:<24} {s.cyan(b.path)}"
+            f"{status_cell} {b.total_revisions:<11} {top_author_str} {pct_cell} {s.cyan(b.path)}"
         )
 
     out.append(s.gray(sub_sep * line_w + "\n"))
@@ -233,6 +245,12 @@ def format_hotspots_table(
         s.bold(s.cyan("\n RepoPulse Architectural Hotspots & Churn Analysis")),
         s.gray(sub_sep * line_w),
     ]
+
+    if not hotspots:
+        out.append(s.green("  No architectural hotspots detected."))
+        out.append(s.gray(sub_sep * line_w + "\n"))
+        return "\n".join(out)
+
     out.append(
         s.gray(
             f"{'Risk Level':<12} {'Churn':<8} {'Added':<8} {'Deleted':<8} {'Score':<8} {'File Path'}"
@@ -241,16 +259,18 @@ def format_hotspots_table(
     out.append(s.gray(sub_sep * line_w))
 
     for h in hotspots:
+        tag = f"[{h.risk_level}]"
+        tag_pad = f"{tag:<12}"
         if h.risk_level == "CRITICAL":
-            lvl = s.red("[CRITICAL]")
+            lvl = s.red(tag_pad)
         elif h.risk_level == "HIGH":
-            lvl = s.red("[HIGH]   ")
+            lvl = s.red(tag_pad)
         elif h.risk_level == "MEDIUM":
-            lvl = s.yellow("[MEDIUM] ")
+            lvl = s.yellow(tag_pad)
         else:
-            lvl = s.gray("[LOW]    ")
+            lvl = s.gray(tag_pad)
         out.append(
-            f"{lvl:<21} {h.churn_count:<8} {h.lines_added:<8} {h.lines_deleted:<8} {h.hotspot_score:<8.1f} {s.cyan(h.path)}"
+            f"{lvl} {h.churn_count:<8} {h.lines_added:<8} {h.lines_deleted:<8} {h.hotspot_score:<8.1f} {s.cyan(h.path)}"
         )
 
     out.append(s.gray(sub_sep * line_w + "\n"))
@@ -269,12 +289,20 @@ def format_coupling_table(
     line_w = 78
 
     out = [s.bold(s.cyan("\n RepoPulse Temporal Co-Change Coupling")), s.gray(sub_sep * line_w)]
+
+    if not couplings:
+        out.append(s.green("  No tight temporal coupling detected between disjoint files."))
+        out.append(s.gray(sub_sep * line_w + "\n"))
+        return "\n".join(out)
+
     out.append(s.gray(f"{'Co-Changes':<12} {'Coupling Degree':<18} {'File Pair'}"))
     out.append(s.gray(sub_sep * line_w))
 
     for c in couplings:
-        c_pct = s.yellow(f"{c.coupling_pct:.1f}%")
-        out.append(f"{c.co_changes:<12} {c_pct:<27} {c.file_a} {arrow} {c.file_b}")
+        c_pct_str = f"{c.coupling_pct:.1f}%"
+        c_pct_pad = f"{c_pct_str:<18}"
+        c_pct = s.yellow(c_pct_pad)
+        out.append(f"{c.co_changes:<12} {c_pct} {c.file_a} {arrow} {c.file_b}")
 
     out.append(s.gray(sub_sep * line_w + "\n"))
     return "\n".join(out)

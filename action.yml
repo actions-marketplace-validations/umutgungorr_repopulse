@@ -58,9 +58,14 @@ runs:
         INPUT_MAX_COMMITS: ${{ inputs.max-commits }}
         INPUT_EXPORT_FILE: ${{ inputs.export-file }}
       run: |
-        PYTHON_BIN="python"
-        if ! command -v python &> /dev/null; then
+        PYTHON_BIN=""
+        if command -v python3 &> /dev/null; then
           PYTHON_BIN="python3"
+        elif command -v python &> /dev/null; then
+          PYTHON_BIN="python"
+        else
+          echo "::error::Python is required to run RepoPulse Git Forensic Action."
+          exit 1
         fi
 
         # Optional: install repopulse CLI if pip is available
@@ -72,4 +77,4 @@ runs:
         # Ensure action source directory is always available on PYTHONPATH
         export PYTHONPATH="$ACTION_PATH/src${PYTHONPATH:+:$PYTHONPATH}"
 
-        "$PYTHON_BIN" -m repopulse.action
+        "$PYTHON_BIN" "$ACTION_PATH/src/repopulse/action.py"

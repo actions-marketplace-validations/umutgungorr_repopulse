@@ -45,7 +45,7 @@ class RepoPulseEngine:
 
         # Basic Stats
         authors_counter = Counter(c.author_name or c.author_email for c in commits)
-        active_dates = {c.date_str for c in commits if c.date_str}
+        active_dates = {c.date_str.split()[0] for c in commits if c.date_str and c.date_str.strip()}
 
         # Sub-analyses
         bus_risks = analyze_bus_factor(commits)

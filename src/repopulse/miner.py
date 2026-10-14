@@ -14,21 +14,25 @@ COMMIT_DELIMITER = "---REPO_PULSE_COMMIT---"
 
 def clean_renamed_path(path: str) -> str:
     """Normalizes git renamed paths like 'lib/{old => new}/file.py' or 'old.py => new.py'."""
+    path = path.strip().strip("'\"")
     if "=>" not in path:
         return path
 
     # Case: dir/{old => new}/file.py
-    brace_match = re.search(r"\{([^}]+)\}", path)
+    brace_match = re.search(r"\{([^}]*=>[^}]*)\}", path)
     if brace_match:
         inside = brace_match.group(1)
-        if "=>" in inside:
-            parts = inside.split("=>")
-            new_sub = parts[1].strip()
-            return path[: brace_match.start()] + new_sub + path[brace_match.end() :]
+        parts = inside.split("=>")
+        new_sub = parts[1].strip()
+        prefix = path[: brace_match.start()]
+        suffix = path[brace_match.end() :]
+        reconstructed = prefix + new_sub + suffix
+        return re.sub(r"/+", "/", reconstructed).strip().lstrip("/")
 
     # Case: old.py => new.py
     parts = path.split("=>")
-    return parts[-1].strip()
+    target = parts[-1].strip().strip("'\"")
+    return re.sub(r"/+", "/", target).strip().lstrip("/")
 
 
 class GitMiner:
@@ -65,6 +69,8 @@ class GitMiner:
         """Constructs git log command line arguments."""
         cmd = [
             "git",
+            "-c",
+            "core.quotepath=false",
             "log",
             f"--pretty=format:{COMMIT_DELIMITER}%x1f%H%x1f%an%x1f%ae%x1f%at%x1f%ad%x1f%s",
             "--date=iso",
@@ -156,17 +162,20 @@ class GitMiner:
         # Remove delimiter prefix if present
         if meta_line.startswith(COMMIT_DELIMITER):
             meta_line = meta_line[len(COMMIT_DELIMITER) :]
+        if meta_line.startswith("\x1f"):
+            meta_line = meta_line[1:]
 
-        fields = [f.strip() for f in meta_line.split("\x1f") if f.strip()]
+        fields = meta_line.split("\x1f", 5)
         if len(fields) < 5:
             return None
 
-        commit_hash = fields[0]
-        author_name = fields[1]
-        author_email = fields[2]
-        timestamp = int(fields[3]) if fields[3].isdigit() else 0
-        date_str = fields[4]
-        message = fields[5] if len(fields) > 5 else ""
+        commit_hash = fields[0].strip()
+        author_name = fields[1].strip()
+        author_email = fields[2].strip()
+        ts_str = fields[3].strip()
+        timestamp = int(ts_str) if ts_str.isdigit() else 0
+        date_str = fields[4].strip()
+        message = fields[5].strip() if len(fields) > 5 else ""
 
         file_changes: list[FileChange] = []
         for numstat_line in lines[1:]:
