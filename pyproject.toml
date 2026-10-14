@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "repopulse"
+name = "git-repopulse"
 version = "1.0.0"
 description = "Zero-dependency Git forensic health, architectural hotspot churn, and bus-factor risk engine."
 readme = "README.md"
@@ -61,6 +61,7 @@ dev = [
 
 [project.scripts]
 repopulse = "repopulse.cli:main"
+git-repopulse = "repopulse.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/umutgungorr/repopulse"

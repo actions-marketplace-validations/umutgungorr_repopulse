@@ -17,6 +17,7 @@
 [![CI](https://github.com/umutgungorr/repopulse/actions/workflows/ci.yml/badge.svg)](https://github.com/umutgungorr/repopulse/actions)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-RepoPulse%20Action-red?logo=githubactions&logoColor=white)](https://github.com/marketplace/actions/repopulse-git-forensic-health-audit)
 [![Version](https://img.shields.io/badge/version-v1.0.0-red.svg?logo=git&logoColor=white)](https://github.com/umutgungorr/repopulse/releases)
+[![PyPI](https://img.shields.io/pypi/v/git-repopulse.svg?color=blue&logo=pypi&logoColor=white)](https://pypi.org/project/git-repopulse/)
 [![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-3776AB.svg?logo=python&logoColor=white)](https://github.com/umutgungorr/repopulse)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0%20external-success.svg)](pyproject.toml)
 [![Tests](https://img.shields.io/badge/tests-100%25%20passing-brightgreen.svg)](#test-suite)
@@ -133,17 +134,17 @@ uvx repopulse audit
 uvx repopulse audit -n 300
 
 # Audit changes over the past 90 days
-uvx repopulse audit --since "90.days.ago"
+uvx --from git-repopulse repopulse audit --since "90.days.ago"
 
 # Inspect specific forensic sub-analyses
-uvx repopulse busfactor    # Knowledge silos only
-uvx repopulse hotspots      # High-churn risk files only
-uvx repopulse coupling      # Hidden co-change pairs only
+uvx --from git-repopulse repopulse busfactor    # Knowledge silos only
+uvx --from git-repopulse repopulse hotspots      # High-churn risk files only
+uvx --from git-repopulse repopulse coupling      # Hidden co-change pairs only
 ```
 
-Or install via pip:
+Or install globally via **pip** (provides both `repopulse` and `git-repopulse`):
 ```bash
-pip install repopulse
+pip install git-repopulse
 ```
 
 ---
