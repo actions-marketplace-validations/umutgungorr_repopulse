@@ -229,6 +229,17 @@ RepoPulse streams Git logs in linear $O(\text{commits})$ time, completely avoidi
 
 ---
 
+<a id="ecosystem"></a>
+## ⚡ Part of the Developer Diagnostics Suite
+
+RepoPulse is part of the zero-dependency **Developer Diagnostics Suite** by [@umutgungorr](https://github.com/umutgungorr):
+
+- 🌲 **[PortTree](https://github.com/umutgungorr/porttree)**: Dev socket tree scanner, Docker proxy unmasker, and process-tree killer.
+- ⚡ **[LogShrink](https://github.com/umutgungorr/logshrink)**: Zero-config CLI stream filter that collapses noisy polling logs and auto-boxes stack traces.
+- 🩺 **[RepoPulse](https://github.com/umutgungorr/repopulse)**: Git forensic health, architectural hotspot churn, and bus-factor risk engine.
+
+---
+
 <a id="contributing"></a>
 ## 🤝 Contributing & Community
 
