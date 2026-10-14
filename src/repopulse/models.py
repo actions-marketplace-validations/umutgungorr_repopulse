@@ -1,5 +1,7 @@
 """Core data models for RepoPulse Git forensic analysis."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -91,6 +93,7 @@ class RepoHealthReport:
     couplings: list[TemporalCoupling]
     author_contributions: dict[str, int]
     overall_health_score: int  # 0 to 100
+    health_grade: str = "A"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -99,6 +102,7 @@ class RepoHealthReport:
             "total_authors": self.total_authors,
             "active_days": self.active_days,
             "overall_health_score": self.overall_health_score,
+            "health_grade": self.health_grade,
             "author_contributions": self.author_contributions,
             "bus_factor_risks": [b.to_dict() for b in self.bus_factor_risks],
             "hotspots": [h.to_dict() for h in self.hotspots],

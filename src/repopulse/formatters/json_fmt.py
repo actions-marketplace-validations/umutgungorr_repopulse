@@ -1,8 +1,7 @@
-"""JSON formatter for RepoPulse."""
+"""Backwards-compatible alias for repopulse.formatter.format_json."""
 
-import json
-from repopulse.models import RepoHealthReport
+from __future__ import annotations
 
+from repopulse.formatter import format_json
 
-def format_json(report: RepoHealthReport) -> str:
-    return json.dumps(report.to_dict(), indent=2, ensure_ascii=False)
+__all__ = ["format_json"]

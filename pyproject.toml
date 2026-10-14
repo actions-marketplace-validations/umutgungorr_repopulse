@@ -4,32 +4,84 @@ build-backend = "hatchling.build"
 
 [project]
 name = "repopulse"
-version = "0.1.0"
-description = "Zero-dependency Git forensic health, hotspot churn, and bus-factor risk engine"
+version = "1.0.0"
+description = "Zero-dependency Git forensic health, architectural hotspot churn, and bus-factor risk engine."
 readme = "README.md"
-requires-python = ">=3.10"
-license = { text = "MIT" }
 authors = [
     { name = "Umut Güngör", email = "umutgungor.dev@gmail.com" }
 ]
-keywords = ["git", "bus-factor", "hotspots", "churn", "code-forensics", "static-analysis"]
+maintainers = [
+    { name = "Umut Güngör", email = "umutgungor.dev@gmail.com" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.9"
+keywords = [
+    "git",
+    "bus-factor",
+    "hotspots",
+    "churn",
+    "code-forensics",
+    "static-analysis",
+    "code-quality",
+    "code-health",
+    "developer-tools",
+    "devops",
+    "git-analytics",
+    "technical-debt"
+]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Version Control :: Git",
     "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Utilities"
 ]
 dependencies = []
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0"
+]
+
 [project.scripts]
 repopulse = "repopulse.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/umutgungorr/repopulse"
+Repository = "https://github.com/umutgungorr/repopulse"
+Issues = "https://github.com/umutgungorr/repopulse/issues"
+Changelog = "https://github.com/umutgungorr/repopulse/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/repopulse"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
+pythonpath = ["src"]
+addopts = "-v --strict-markers"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
+ignore = [
+    "E501",  # Line length handled by formatter
+]

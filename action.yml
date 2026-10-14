@@ -1,0 +1,75 @@
+name: 'RepoPulse Git Forensic Health Audit'
+description: 'Zero-dependency Git forensic health, hotspot churn, and bus-factor risk analyzer'
+author: 'Umut Güngör'
+
+branding:
+  icon: 'activity'
+  color: 'red'
+
+inputs:
+  path:
+    description: 'Target repository path to analyze (default: current workspace)'
+    required: false
+    default: '.'
+  fail-under:
+    description: 'Fail step with exit code 1 if composite health score is strictly below this threshold'
+    required: false
+    default: ''
+  summary:
+    description: 'Write formatted Markdown health audit card to $GITHUB_STEP_SUMMARY'
+    required: false
+    default: 'true'
+  since:
+    description: 'Limit commit analysis to duration or date (e.g. "6.months.ago", "2026-01-01")'
+    required: false
+    default: ''
+  max-commits:
+    description: 'Maximum number of commits to mine from git log'
+    required: false
+    default: ''
+  export-file:
+    description: 'Optional file path to write the Markdown report to'
+    required: false
+    default: ''
+
+outputs:
+  health-score:
+    description: 'Objective composite repository health score (0-100)'
+    value: ${{ steps.run-repopulse.outputs.health-score }}
+  bus-factor-alerts:
+    description: 'Total number of single-point-of-failure files (>=75% single author)'
+    value: ${{ steps.run-repopulse.outputs.bus-factor-alerts }}
+  hotspot-count:
+    description: 'Total number of detected CRITICAL and HIGH architectural hotspots'
+    value: ${{ steps.run-repopulse.outputs.hotspot-count }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run RepoPulse Action
+      id: run-repopulse
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_FAIL_UNDER: ${{ inputs.fail-under }}
+        INPUT_SUMMARY: ${{ inputs.summary }}
+        INPUT_SINCE: ${{ inputs.since }}
+        INPUT_MAX_COMMITS: ${{ inputs.max-commits }}
+        INPUT_EXPORT_FILE: ${{ inputs.export-file }}
+      run: |
+        PYTHON_BIN="python"
+        if ! command -v python &> /dev/null; then
+          PYTHON_BIN="python3"
+        fi
+
+        # Optional: install repopulse CLI if pip is available
+        if "$PYTHON_BIN" -m pip --version &> /dev/null; then
+          "$PYTHON_BIN" -m pip install --quiet --no-warn-script-location "$ACTION_PATH" 2>/dev/null || \
+          "$PYTHON_BIN" -m pip install --quiet --break-system-packages --no-warn-script-location "$ACTION_PATH" 2>/dev/null || true
+        fi
+
+        # Ensure action source directory is always available on PYTHONPATH
+        export PYTHONPATH="$ACTION_PATH/src${PYTHONPATH:+:$PYTHONPATH}"
+
+        "$PYTHON_BIN" -m repopulse.action

@@ -1,23 +1,33 @@
 """High-level analysis orchestrator and health scoring for RepoPulse."""
 
+from __future__ import annotations
+
 from collections import Counter
 from pathlib import Path
-from typing import Optional
-from repopulse.analyzers.bus_factor import analyze_bus_factor
-from repopulse.analyzers.coupling import analyze_coupling
-from repopulse.analyzers.hotspots import analyze_hotspots
-from repopulse.git_miner import GitMiner
-from repopulse.models import RepoHealthReport
+
+from repopulse.busfactor import analyze_bus_factor
+from repopulse.coupling import analyze_coupling
+from repopulse.hotspots import analyze_hotspots
+from repopulse.miner import GitMiner
+from repopulse.models import FileBusFactor, Hotspot, RepoHealthReport, TemporalCoupling
+from repopulse.scorer import compute_health_score
 
 
 class RepoPulseEngine:
+    """Orchestrates Git mining, bus-factor analysis, hotspot detection, and composite scoring."""
+
     def __init__(self, repo_path: str = "."):
         self.repo_path = Path(repo_path).resolve()
         self.miner = GitMiner(str(self.repo_path))
 
-    def analyze(self, max_commits: Optional[int] = None, since: Optional[str] = None) -> RepoHealthReport:
-        """Executes full forensic analysis and generates a RepoHealthReport."""
-        commits = self.miner.mine_commits(max_commits=max_commits, since=since)
+    def analyze(
+        self,
+        max_commits: int | None = None,
+        since: str | None = None,
+        subpath: str | None = None,
+    ) -> RepoHealthReport:
+        """Executes full forensic health analysis across git commit history."""
+        commits = self.miner.mine_commits(max_commits=max_commits, since=since, subpath=subpath)
 
         if not commits:
             return RepoHealthReport(
@@ -30,32 +40,26 @@ class RepoPulseEngine:
                 couplings=[],
                 author_contributions={},
                 overall_health_score=100,
+                health_grade="A",
             )
 
         # Basic Stats
         authors_counter = Counter(c.author_name or c.author_email for c in commits)
         active_dates = {c.date_str for c in commits if c.date_str}
 
-        # Detailed Analysis
+        # Sub-analyses
         bus_risks = analyze_bus_factor(commits)
         hotspots = analyze_hotspots(commits)
         couplings = analyze_coupling(commits)
 
-        # Health Scoring (100 is pristine)
-        score = 100
-        critical_bus_count = sum(1 for b in bus_risks if b.is_at_risk)
-        critical_hotspot_count = sum(1 for h in hotspots if h.risk_level in ("CRITICAL", "HIGH"))
-        tight_coupling_count = len(couplings)
-
-        score -= min(35, critical_bus_count * 5)
-        score -= min(35, critical_hotspot_count * 5)
-        score -= min(20, tight_coupling_count * 3)
-
-        # Single author deduction if repo has >10 commits but only 1 author
-        if len(authors_counter) == 1 and len(commits) >= 10:
-            score -= 10
-
-        overall_score = max(10, min(100, score))
+        # Health Scoring
+        score_breakdown = compute_health_score(
+            bus_risks=bus_risks,
+            hotspots=hotspots,
+            couplings=couplings,
+            total_commits=len(commits),
+            total_authors=len(authors_counter),
+        )
 
         return RepoHealthReport(
             repo_name=self.repo_path.name,
@@ -66,5 +70,38 @@ class RepoPulseEngine:
             hotspots=hotspots,
             couplings=couplings,
             author_contributions=dict(authors_counter.most_common(10)),
-            overall_health_score=overall_score,
+            overall_health_score=score_breakdown.overall_score,
+            health_grade=score_breakdown.grade,
         )
+
+    def get_bus_factor(
+        self,
+        max_commits: int | None = None,
+        since: str | None = None,
+        subpath: str | None = None,
+    ) -> list[FileBusFactor]:
+        """Runs bus factor analysis only."""
+        commits = self.miner.mine_commits(max_commits=max_commits, since=since, subpath=subpath)
+        return analyze_bus_factor(commits)
+
+    def get_hotspots(
+        self,
+        max_commits: int | None = None,
+        since: str | None = None,
+        subpath: str | None = None,
+        top_n: int = 15,
+    ) -> list[Hotspot]:
+        """Runs hotspots analysis only."""
+        commits = self.miner.mine_commits(max_commits=max_commits, since=since, subpath=subpath)
+        return analyze_hotspots(commits, top_n=top_n)
+
+    def get_coupling(
+        self,
+        max_commits: int | None = None,
+        since: str | None = None,
+        subpath: str | None = None,
+        top_n: int = 15,
+    ) -> list[TemporalCoupling]:
+        """Runs coupling analysis only."""
+        commits = self.miner.mine_commits(max_commits=max_commits, since=since, subpath=subpath)
+        return analyze_coupling(commits, top_n=top_n)
