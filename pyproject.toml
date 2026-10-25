@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "git-repopulse"
-version = "1.0.0"
+version = "1.0.1"
 description = "Zero-dependency Git forensic health, architectural hotspot churn, and bus-factor risk engine."
 readme = "README.md"
 authors = [
@@ -64,7 +64,8 @@ repopulse = "repopulse.cli:main"
 git-repopulse = "repopulse.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/umutgungorr/repopulse"
+Homepage = "https://umutgungorr.com/"
+Documentation = "https://umutgungorr.com/projects/repopulse"
 Repository = "https://github.com/umutgungorr/repopulse"
 Issues = "https://github.com/umutgungorr/repopulse/issues"
 Changelog = "https://github.com/umutgungorr/repopulse/blob/main/CHANGELOG.md"
