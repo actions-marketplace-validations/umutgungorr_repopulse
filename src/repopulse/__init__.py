@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "Umut Güngör"
 
 from repopulse.busfactor import analyze_bus_factor
